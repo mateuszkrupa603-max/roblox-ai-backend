@@ -1,10 +1,10 @@
 const express = require("express");
-const { GoogleGenAI } = require("@google/genai");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
 app.use(express.json());
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 app.post("/generate", async (req, res) => {
   try {
@@ -18,14 +18,13 @@ ZASADY:
 2. Nie używaj znaczników markdown takich jak \`\`\`lua ani \`\`\`. Zwróć sam surowy kod.
 3. Kod musi działać od razu po wklejeniu do Roblox Studio.`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: [
-        { role: "user", parts: [{ text: systemInstruction + "\n\nZadanie: " + prompt }] }
-      ]
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      systemInstruction: systemInstruction 
     });
 
-    let generatedCode = response.text || "";
+    const result = await model.generateContent(prompt);
+    let generatedCode = result.response.text() || "";
     generatedCode = generatedCode.replace(/```lua/g, "").replace(/```/g, "").trim();
 
     res.json({ code: generatedCode });
